@@ -44,12 +44,16 @@
 			var el = $(this),
 				list = '',
 				isChecked = null,
+				isReadOnly = null,
 				childs = el.children();
 			
 			for (var i=0; i < childs.length; i++) {
 				list = list + '<a class="star" title="' + $(childs[i]).val() + '" />';
 				if ($(childs[i]).is(':checked')) {
 					isChecked = $(childs[i]).val();
+				};
+				if ($(childs[i]).attr('readonly')) {
+					isReadOnly = $(childs[i]).val();
 				};
 			};
 			
@@ -59,19 +63,21 @@
 				.append('<div class="stars">' + list + '</div>')
 				.unbind('set.rating')
 				.bind('set.rating', $.fn.rating.set)
-				.trigger('set.rating', isChecked);
+				.trigger('set.rating', isChecked, isReadOnly);
 			
 			$('a', el).live('click', function(e){
 				
-				$(this)
-					.unbind('clickAct.rating')
-					.bind('clickAct.rating', $.fn.rating.clickAct)
-					.trigger('clickAct.rating');
+				if (!isReadOnly) {
+					$(this)
+						.unbind('clickAct.rating')
+						.bind('clickAct.rating', $.fn.rating.clickAct)
+						.trigger('clickAct.rating');
+				}
 			});
 			
 			el.data('rating').callback(e);
 		},
-		set: function(e, val) {
+		set: function(e, val, readonly) {
 			//console.log(e, val)
 			var el = $(this);
 			
@@ -91,10 +97,12 @@
 					.addClass('fullStar');
 			}
 			
-			el
-				.unbind('hoverAct.rating')
-				.bind('hoverAct.rating', $.fn.rating.hoverAct)
-				.trigger('hoverAct.rating', val);
+			if (readonly) {
+				el
+					.unbind('hoverAct.rating')
+					.bind('hoverAct.rating', $.fn.rating.hoverAct)
+					.trigger('hoverAct.rating', val);
+			}
 			
 			el.data('rating').callback(e);
 			return;
@@ -142,7 +150,7 @@
 			matchInput.attr('checked', true);
 			
 			el.parent().parent()
-				.trigger('set.rating', matchInput.val())
+				.trigger('set.rating', matchInput.val(), 'readonly')
 				.data('rating').callback(e);
 		}
 	});
